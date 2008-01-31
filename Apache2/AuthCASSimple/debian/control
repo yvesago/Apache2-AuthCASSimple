@@ -1,0 +1,15 @@
+Source: libapache2-authcassimple-perl
+Section: perl
+Priority: optional
+Build-Depends: debhelper (>= 5.0.0)
+Build-Depends-Indep: perl (>= 5.8.8-7etch1)
+Maintainer: AGOSTINI Yves <agostini@univ-metz.fr>
+Standards-Version: 3.7.2
+
+Package: libapache2-authcassimple-perl
+Architecture: all
+Depends: ${perl:Depends}, ${misc:Depends}, libapache2-mod-perl2, libapache2-request-perl, libapache-session-wrapper-perl, libauthen-cas-client-perl,
+Description: Apache2 module to authentificate trough a CAS server
+ Apache2 module to authentificate trough a CAS server
+ .
+ This description was automagically extracted from the module by dh-make-perl.
