@@ -12,5 +12,10 @@ requires 'Apache::Session::Wrapper';
 requires 'Authen::CAS::Client';
 
 auto_install;
+
+install_script('scripts/delete_session_data.pl');
+
+tests('t/*.t');
+
 WriteAll;
 

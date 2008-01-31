@@ -379,29 +379,41 @@ Force the path of the session cookie for same policy in all subdirectories else 
 
 Apache2 mod_perl2 don't be use with mod_proxy. Default is off.
 
+=back
+
 =head1 VERSION
 
 This documentation describes Apache2::AuthCASSimple version 0.0.1
 
 =head1 BUGS AND TROUBLESHOOTING
 
+=over 4
+
+=item *
+Old expired sessions files must be deleted with an external provided script : C<delete_session_data.pl>
+
+=item *
 L<Apache::Session::Wrapper> certainly need L<Apache2::Cookie>
 
-$r must be global for sessions with L<Apache::Session::Wrapper>, add 
+=item *
+C<$r> must be global for sessions with L<Apache::Session::Wrapper>, add 
 
   PerlOptions +GlobalRequest
 
 in your virtualhost conf
 
+=item *
 Apreq module must be enable in debian
 
   LoadModule apreq_module /usr/lib/apache2/modules/mod_apreq2.so
+
+=back
 
 Please submit any bug reports to agostini@univ-metz.fr.
 
 =head1 NOTES
 
-Requires L<mod_perl 2> version 2.03 or later
+Requires C<mod_perl 2> version 2.02 or later
 Requires L<Authen::CAS::Client>
 Requires L<Apache::Session::Wrapper> 
 
