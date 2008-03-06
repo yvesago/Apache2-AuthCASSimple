@@ -1,5 +1,4 @@
-^inc/*
-\b.svn\b
+.svn*
 ~$
 .gz$
 .bak$

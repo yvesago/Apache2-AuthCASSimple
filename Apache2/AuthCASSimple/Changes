@@ -1,6 +1,9 @@
 Revision history for Perl module Apache2::AuthCASSimple
 
-0.01 Tue Jan 29 16:33:04 2008
+0.0.2 Thu Mar 06 10:58:00 2008
+    - add missing inc and META.yml
+
+0.0.1 Tue Jan 29 16:33:04 2008
     - original version; created by ExtUtils::ModuleMaker 0.49
 
 
