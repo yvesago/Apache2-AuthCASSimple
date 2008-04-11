@@ -1,4 +1,3 @@
-build-stamp
 Changes
 debian/changelog
 debian/compat
@@ -18,7 +17,6 @@ inc/Module/Install/Metadata.pm
 inc/Module/Install/Scripts.pm
 inc/Module/Install/Win32.pm
 inc/Module/Install/WriteAll.pm
-install-stamp
 lib/Apache2/AuthCASSimple.pm
 LICENSE
 Makefile.PL
@@ -28,4 +26,6 @@ META.yml
 README
 scripts/delete_session_data.pl
 t/001_load.t
+t/pod.t
+t/pod_coverage.t
 Todo

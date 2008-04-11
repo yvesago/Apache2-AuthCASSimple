@@ -1,15 +1,15 @@
 use inc::Module::Install;
 
 name            'Apache2-AuthCASSimple';
+perl_version    '5.006';
 all_from        'lib/Apache2/AuthCASSimple.pm';
+version_from    'lib/Apache2/AuthCASSimple.pm';
 
-requires 'Apache2::Const';
-requires 'Apache2::RequestUtil';
-requires 'Apache2::RequestRec';
-requires 'Apache2::Log';
-requires 'Apache2::Connection';
+requires 'mod_perl2' => 2.0;
 requires 'Apache::Session::Wrapper';
 requires 'Authen::CAS::Client';
+
+build_requires  'Pod::Coverage';
 
 auto_install;
 

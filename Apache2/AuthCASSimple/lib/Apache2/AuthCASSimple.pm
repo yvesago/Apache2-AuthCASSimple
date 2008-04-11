@@ -7,11 +7,10 @@ use Apache2::RequestRec ();
 use Apache2::Log;
 use Apache::Session::Wrapper;
 use Authen::CAS::Client;
-#use Apache2::Cookie;
 use Apache2::Connection;
 use vars qw($VERSION);
 
-$VERSION = '0.0.2';
+$VERSION = '0.0.3';
 
 
 #
@@ -380,6 +379,12 @@ Force the path of the session cookie for same policy in all subdirectories else 
 Apache2 mod_perl2 don't be use with mod_proxy. Default is off.
 
 =back
+
+=head1 METHOD
+
+=head2 handler
+
+call by apache2
 
 =head1 VERSION
 
