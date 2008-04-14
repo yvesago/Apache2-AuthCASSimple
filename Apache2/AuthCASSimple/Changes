@@ -1,5 +1,8 @@
 Revision history for Perl module Apache2::AuthCASSimple
 
+0.0.4 Sat, 12 Apr 2008 12:51:31 +0200
+    - dh-make-perl don't like perl_version and version_from in Makefile.PL
+
 0.0.3 Fri, 11 Apr 2008 10:31:45 +0200
     - better Makefile, more pod test
 

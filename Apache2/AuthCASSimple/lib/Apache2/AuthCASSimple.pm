@@ -10,7 +10,7 @@ use Authen::CAS::Client;
 use Apache2::Connection;
 use vars qw($VERSION);
 
-$VERSION = '0.0.3';
+$VERSION = '0.0.4';
 
 
 #
