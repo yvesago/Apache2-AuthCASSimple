@@ -1,5 +1,12 @@
 Revision history for Perl module Apache2::AuthCASSimple
 
+0.05 Tue, 13 May 2008 11:52:40 +0200
+    - clean README
+    - add use warnings
+    - move delete_session_data.pl from scripts to examples
+    - add copyright
+    - try to have better META.yml
+
 0.0.4 Sat, 12 Apr 2008 12:51:31 +0200
     - dh-make-perl don't like perl_version and version_from in Makefile.PL
 

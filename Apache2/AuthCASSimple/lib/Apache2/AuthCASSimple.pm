@@ -1,6 +1,7 @@
 package Apache2::AuthCASSimple;
 
 use strict;
+use warnings;
 use Apache2::Const qw( OK AUTH_REQUIRED DECLINED REDIRECT SERVER_ERROR M_GET);
 use Apache2::RequestUtil ();
 use Apache2::RequestRec ();
@@ -10,7 +11,7 @@ use Authen::CAS::Client;
 use Apache2::Connection;
 use vars qw($VERSION);
 
-$VERSION = '0.0.5';
+$VERSION = '0.05';
 
 
 #
@@ -395,7 +396,7 @@ This documentation describes Apache2::AuthCASSimple version 0.0.1
 =over 4
 
 =item *
-Old expired sessions files must be deleted with an external provided script : C<delete_session_data.pl>
+Old expired sessions files must be deleted with an example provided script : C<delete_session_data.pl>
 
 =item *
 L<Apache::Session::Wrapper> certainly need L<Apache2::Cookie>
@@ -431,6 +432,8 @@ Requires L<Apache::Session::Wrapper>
     http://www.crium.univ-metz.fr
 
 =head1 COPYRIGHT
+
+Copyright (c) 2008 by Yves Agostini
 
 This program is free software; you can redistribute
 it and/or modify it under the same terms as Perl itself.
