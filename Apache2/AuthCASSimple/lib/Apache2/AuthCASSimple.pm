@@ -11,7 +11,7 @@ use Authen::CAS::Client;
 use Apache2::Connection;
 use vars qw($VERSION);
 
-$VERSION = '0.05';
+$VERSION = '0.06';
 
 
 #
@@ -128,9 +128,9 @@ sub handler ($) {
 sub _get_requested_url ($$) {
   my $r = shift;
   my $mod_proxy = shift;
+  my $is_https = $r->dir_config('HTTPSServer') || 0;
 
   my $port = $r->get_server_port();
-  my $is_https = $r->subprocess_env('https') ? 1 : 0;
 
   my $url = $is_https ? 'https://' : 'http://';
   $url .= $r->hostname();
@@ -209,6 +209,7 @@ sub _get_user_from_session ($) {
   my $cas_session_dir = $r->dir_config('CASSessionDirectory') || '/tmp';
   my $cas_cookie_path = $r->dir_config('CASFixDirectory') || '/';
   my $cas_session_timeout = $r->dir_config('CASSessionTimeout') || 60;
+  my $is_https = $r->dir_config('HTTPSServer') || 0;
 
   $r->log()->info(__PACKAGE__.": Checking session.");
 
@@ -217,7 +218,7 @@ sub _get_user_from_session ($) {
         directory => $cas_session_dir,
         lock_directory  => $cas_session_dir,
         use_cookie => 1,
-        cookie_secure => $r->subprocess_env('https') ? 1 : 0,
+        cookie_secure => $is_https,
         cookie_resend => 1,
         cookie_expires => 'session',
         cookie_path => $cas_cookie_path
@@ -262,6 +263,7 @@ sub _create_user_session ($) {
   my $mod_proxy = $r->dir_config('ModProxy');
   my $cas_session_dir = $r->dir_config('CASSessionDirectory') || '/tmp';
   my $cas_cookie_path = $r->dir_config('CASFixDirectory') || '/';
+  my $is_https = $r->dir_config('HTTPSServer') || 0;
 
   $r->log()->info(__PACKAGE__.": Creating session");
 
@@ -270,7 +272,7 @@ sub _create_user_session ($) {
         directory => $cas_session_dir,
         lock_directory  => $cas_session_dir,
         use_cookie => 1,
-        cookie_secure => $r->subprocess_env('https') ? 1 : 0,
+        cookie_secure => $is_https,
         cookie_resend => 1,
         cookie_expires => 'session',
         cookie_path => $cas_cookie_path
@@ -318,6 +320,7 @@ This module allow the use of simple text files for sessions.
     PerlSetVar CASSessionDirectory /tmp
     # PerlSetVar CASFixDirectory /
     # PerlSetVar ModProxy 1
+    # PerlSetVar HTTPSServer 1
 
     require valid-user
   </Location>
@@ -379,6 +382,14 @@ Force the path of the session cookie for same policy in all subdirectories else 
 
 Apache2 mod_perl2 don't be use with mod_proxy. Default is off.
 
+=item HTTPSServer
+
+If you want to keep a HTTPS server for all data. Default is 0.
+
+=item OK AUTH_REQUIRED DECLINED REDIRECT SERVER_ERROR M_GET
+
+Apache constants to make pod coverage happy
+
 =back
 
 =head1 METHOD
@@ -389,7 +400,7 @@ call by apache2
 
 =head1 VERSION
 
-This documentation describes Apache2::AuthCASSimple version 0.0.1
+This documentation describes Apache2::AuthCASSimple version 0.06
 
 =head1 BUGS AND TROUBLESHOOTING
 
@@ -411,7 +422,13 @@ in your virtualhost conf
 =item *
 Apreq module must be enable in debian
 
+  a2enmod apreq
+
+or add 
+
   LoadModule apreq_module /usr/lib/apache2/modules/mod_apreq2.so
+
+in your apache configuration file
 
 =back
 

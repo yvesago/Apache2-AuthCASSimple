@@ -1,5 +1,8 @@
 Revision history for Perl module Apache2::AuthCASSimple
 
+0.06 Thu, 11 Dec 2008 17:05:04 +0100
+    - add an HTTPSServer config flag, mod_perl2 can not detect SSL whithout Apache2::ModSSL
+
 0.05 Tue, 13 May 2008 11:52:40 +0200
     - clean README
     - add use warnings
