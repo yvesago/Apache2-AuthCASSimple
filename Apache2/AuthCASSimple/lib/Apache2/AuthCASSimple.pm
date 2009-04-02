@@ -9,10 +9,10 @@ use Apache2::Log;
 use Apache::Session::Wrapper;
 use Authen::CAS::Client;
 use Apache2::Connection;
+use CGI;
 use vars qw($VERSION);
 
-$VERSION = '0.06';
-
+$VERSION = '0.07';
 
 #
 # handler()
@@ -24,19 +24,22 @@ sub handler ($) {
   my $log = $r->log();
 
 
+  my $q = CGI->new($r);
   # does it need to do something ?
   #return DECLINED unless($r->ap_auth_type() eq __PACKAGE__);
 
-  $log->info(__PACKAGE__."-".$r->ap_auth_type()."-: Entering into authentification process.:".$r->uri() ."--".$r->args());
-  $log->info(__PACKAGE__."---".$r->connection->remote_ip()."--: Entering into authentification process.:".$r->uri() ."--".$r->args());
+  $log->info(__PACKAGE__.": == Entering into authentification process.:" );
+  $log->info(__PACKAGE__.": == ".$r->method.' '.$r->uri() .' '.$r->args() );
+  $log->info(__PACKAGE__.": == ".$r->connection->remote_ip() );
 
   # Get module config (Apache Perl SetVAR values)
   my $cas_session_timeout = $r->dir_config('CASSessionTimeout') || 60;
   my $cas_ssl = $r->dir_config('CASServerNoSSL')?0:1;
   my $cas_name = $r->dir_config('CASServerName') || 'my.casserver.com';
-  my $cas_port = $r->dir_config('CASServerPort') ? $r->dir_config('CASServerPort') : 443 ;
+  my $cas_port = $r->dir_config('CASServerPort') ? ':'.$r->dir_config('CASServerPort') : 443 ;
   $cas_port = '' if ( $cas_port == 443 && $cas_ssl );
   my $cas_path = $r->dir_config('CASServerPath') || '/' ;
+  $cas_path = '' if ($cas_path eq '/');
   my $mod_proxy = $r->dir_config('ModProxy');
 
   # Check for internal session
@@ -55,7 +58,8 @@ sub handler ($) {
 
   # instance CAS object
   my ($cas, %options);
-  $options{casUrl} = ($cas_ssl ? 'https://' : 'http://').$cas_name.':'.$cas_port.$cas_path;
+  $options{casUrl} = ($cas_ssl ? 'https://' : 'http://').$cas_name.$cas_port.$cas_path;
+ # $log->info('==casUrl==='.$options{casUrl}.'____');
  # $options{CAFile} = $cfg->{_ca_file} if ($cfg->{_cas_ssl});
 
   unless($cas = Authen::CAS::Client->new($options{casUrl}, fatal => 1)) {
@@ -64,14 +68,16 @@ sub handler ($) {
   }
 
   my $requested_url = _get_requested_url($r,$mod_proxy);
-  my $login_url = $cas->login_url().$requested_url;
-
+  my $login_url = $requested_url;
+  # TODO better clean url
+  $login_url =~ s/\?/\&/;
+  $login_url = $cas->login_url().$login_url;
+  #$log->info( '==login_url==='.$login_url.'____');
+ 
+  my $ticket = $q->param('ticket');
   # redirect to CAS server unless ticket parameter
-  my %args = map { split '=', $_ }  split '&', $r->args();
-  my $ticket = $args{'ticket'};
-
   unless ($ticket) {
-    $log->info(__PACKAGE__.": No ticket, client redirected to CAS server.");
+    $log->info(__PACKAGE__.": No ticket, client redirected to CAS server. ".$login_url);
     $r->headers_out->add("Location" => $login_url);
     return REDIRECT;
   }
@@ -82,11 +88,11 @@ sub handler ($) {
       my $r = $cas->proxy_validate( $requested_url, $ticket );
         if( $r->is_success() ) {
             $user=$r->user();
-            $log->warn(__PACKAGE__.": Validate PT on CAS Proxy server. ".join ",", $r->proxies());
+            $log->info(__PACKAGE__.": Validate PT on CAS Proxy server. ".join ",", $r->proxies());
         };
   }
   else {
-      $log->warn(__PACKAGE__.": Validate ST $requested_url, $ticket on CAS Proxy server ");
+      $log->info(__PACKAGE__.": Validate ST $ticket on CAS Proxy server : $requested_url");
       my $r = $cas->service_validate( $requested_url, $ticket );
       if ( $r->is_success() ) {
         $user = $r->user();
@@ -94,23 +100,24 @@ sub handler ($) {
   }
 
   unless ($user) {
-    $log->warn(__PACKAGE__.": Unable to validate ticket ".$ticket." on CAS server.");
+    $log->info(__PACKAGE__.": Unable to validate ticket ".$ticket." on CAS server.");
     $r->err_headers_out->add("Location" => $login_url);
     return REDIRECT;
-    #return FORBIDDEN;
   }
 
-  $log->info(__PACKAGE__.": Ticket ".$ticket." succesfully validated.");
+  $log->info(__PACKAGE__.": Ticket ".$ticket." succesfully validated for $user");
 
   if ( $user ) {
    $r->user($user);
+   my $str_args = _str_args($r);
 
    $log->info(__PACKAGE__.": New session ".$r->uri() ."--".$r->args());
 
    # if we are there (and timeout is set), we can create session data and cookie
-   _remove_ticket($r);
+   # _remove_ticket($r);
    _create_user_session($r) if($cas_session_timeout >= 0);
-   $r->err_headers_out->add("Location" => $r->uri . ($r->args ? '?' . $r->args : '') );
+   $log->debug("Location => ".$r->uri . ($str_args ? '?' . $str_args : ''));
+   $r->err_headers_out->add("Location" => $r->uri . ($str_args ? '?' . $str_args : '') );
 
    # if session, redirect remove ticket in url
    return ($cas_session_timeout >= 0)?REDIRECT:OK;
@@ -119,6 +126,32 @@ sub handler ($) {
   return DECLINED;
 
 }
+
+#
+# _get_args
+#
+# Stringify args
+#
+
+sub _str_args ($;$) {
+  my $r = shift;
+  my $keep_ticket = shift;
+
+  my $q = CGI->new($r);
+  my %args = $q->Vars;
+  my @qs = ();
+
+  foreach (sort {$a cmp $b} keys(%args)) {
+    next if ($_ eq 'ticket' && !$keep_ticket);
+    my $str = $args{$_};
+    $str =~ s/([^A-Za-z0-9])/sprintf("%%%02X", ord($1))/seg;
+    push(@qs, $_."=".$str);
+  }
+
+  my $str_args = join("\&", @qs);
+  return $str_args;
+}
+
 
 #
 # _get_requested_url()
@@ -148,17 +181,12 @@ sub _get_requested_url ($$) {
 sub _get_query_string ($) {
   my $r = shift;
 
+  my $q = CGI->new($r);
+
   _post_to_get($r) if ($r->method eq 'POST');
 
-  my %args = map { split '=', $_ }  split '&', $r->args();
-  my @qs = ();
-
-  foreach (sort {$a cmp $b} keys(%args)) {
-    next if ($_ eq 'ticket');
-    push(@qs, $_."=".$args{$_});
-  }
-
-  return $#qs != -1 ? "?".join("\&", @qs) : "";
+  my $str_args = _str_args($r);
+  return ($str_args)?"?".$str_args:'';
 }
 
 #
@@ -169,8 +197,9 @@ sub _get_query_string ($) {
 sub _post_to_get ($) {
   my $r = shift;
 
-  my $content = $r->content;
-  $r->log()->info($content);
+  my $content = _str_args($r,1);
+
+  $r->log()->info('POST to GET: '.$content);
   $r->method("GET");
   $r->method_number(M_GET);
   $r->headers_in->unset("Content-length");
@@ -184,16 +213,7 @@ sub _post_to_get ($) {
 #
 sub _remove_ticket ($) {
   my $r = shift;
-
-  my %args = map { split '=', $_ }  split '&', $r->args();
-  my @qs = ();
-
-  foreach (sort {$a cmp $b} keys(%args)) {
-    next if ($_ eq 'ticket');
-    push(@qs, $_."=".$args{$_});
-  }
-
-  $r->args(join("\&", @qs));
+   $r->args( _str_args($r));
 }
 
 #
@@ -222,31 +242,36 @@ sub _get_user_from_session ($) {
         cookie_resend => 1,
         cookie_expires => 'session',
         cookie_path => $cas_cookie_path
-    ); };
-
+    ); 
+  
+    $r->log()->info(__PACKAGE__.": Session id ".$s->{session_id});
+    
+    };
 
     return "" unless(defined $s);
+  
+    my $ip = ($mod_proxy)?$r->headers_in->{'X-Forwarded-For'}:$r->connection->remote_ip();
+    my $user = $s->session->{'CASUser'} || 'empty cookie';
 
+    my $session_time = $s->session->{'time'} || 0;
 
-    if ($cas_session_timeout && $s->session->{'time'} + $cas_session_timeout < time) {
-        $r->log()->warn(__PACKAGE__.": Session TimeOut !");
+    if ($cas_session_timeout && $session_time + $cas_session_timeout < time) {
+        $r->log()->warn(__PACKAGE__.': Session TimeOut, for '.$s->{session_id}.' / '.$ip );
         $s->delete_session();
         return "";
     };
 
-  my $ip = ($mod_proxy)?$r->headers_in->{'X-Forwarded-For'}:$r->connection->remote_ip();
-
 
   if($s->session->{'CASIP'} ne $ip) {
-    $r->log()->warn(__PACKAGE__.": Remote IP Address changed along requests !");
+    $r->log()->info(__PACKAGE__.": Remote IP Address changed along requests !");
     $s->delete_session();
     return "";
   }
-  elsif(my $user = $s->session->{'CASUser'}) {
+  elsif( $user ) {
     return $user;
   }
   else {
-    $r->log()->warn(__PACKAGE__.": Session found, but no data inside it.");
+    $r->log()->info(__PACKAGE__.": Session found, but no data inside it.");
     $s->delete_session();
     return "";
   }
@@ -265,7 +290,7 @@ sub _create_user_session ($) {
   my $cas_cookie_path = $r->dir_config('CASFixDirectory') || '/';
   my $is_https = $r->dir_config('HTTPSServer') || 0;
 
-  $r->log()->info(__PACKAGE__.": Creating session");
+  $r->log()->info(__PACKAGE__.": Creating session for ".$r->user());
 
   my $s = Apache::Session::Wrapper->new(
         class  => 'File',
@@ -279,9 +304,11 @@ sub _create_user_session ($) {
         );
 
   unless ($s) {
-    $r->log()->warn(__PACKAGE__.": Unable to create session for ".$r->connection->user().".");
+    $r->log()->info(__PACKAGE__.": Unable to create session for ".$r->connection->user().".");
     return;
   }
+
+  $r->log()->info(__PACKAGE__.": Session id ".$s->{session_id});
 
   $s->session->{'CASUser'} = $r->user();
   my $ip = ($mod_proxy)?$r->headers_in->{'X-Forwarded-For'}:$r->connection->remote_ip();
@@ -307,6 +334,8 @@ This module allow the use of simple text files for sessions.
 
 =head1 SYNOPSIS
 
+
+  PerlOptions +GlobalRequest
 
   <Location /protected>
     AuthType Apache2::AuthCASSimple
@@ -400,7 +429,7 @@ call by apache2
 
 =head1 VERSION
 
-This documentation describes Apache2::AuthCASSimple version 0.06
+This documentation describes Apache2::AuthCASSimple version 0.07
 
 =head1 BUGS AND TROUBLESHOOTING
 
@@ -439,6 +468,7 @@ Please submit any bug reports to agostini@univ-metz.fr.
 Requires C<mod_perl 2> version 2.02 or later
 Requires L<Authen::CAS::Client>
 Requires L<Apache::Session::Wrapper> 
+Requires L<CGI> 
 
 =head1 AUTHOR
 
@@ -450,7 +480,7 @@ Requires L<Apache::Session::Wrapper>
 
 =head1 COPYRIGHT
 
-Copyright (c) 2008 by Yves Agostini
+Copyright (c) 2009 by Yves Agostini
 
 This program is free software; you can redistribute
 it and/or modify it under the same terms as Perl itself.

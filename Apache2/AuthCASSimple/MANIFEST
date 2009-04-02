@@ -1,4 +1,5 @@
 Changes
+examples/delete_session_data.pl
 inc/Module/AutoInstall.pm
 inc/Module/Install.pm
 inc/Module/Install/AutoInstall.pm
@@ -17,7 +18,6 @@ MANIFEST
 MANIFEST.SKIP
 META.yml
 README
-examples/delete_session_data.pl
 t/001_load.t
 t/pod.t
 t/pod_coverage.t

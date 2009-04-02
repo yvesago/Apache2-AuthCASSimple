@@ -10,6 +10,7 @@ requires 'Apache::Session::Wrapper';
 requires 'Authen::CAS::Client';
 requires 'Apache2::Log';
 requires 'Apache2::Connection';
+requires 'CGI';
 
 build_requires  'Pod::Coverage';
 build_requires  'Test::More';
@@ -18,6 +19,7 @@ build_requires 'Apache::Session::Wrapper';
 build_requires 'Authen::CAS::Client';
 build_requires 'Apache2::Log';
 build_requires 'Apache2::Connection';
+build_requires 'CGI';
 
 auto_install;
 

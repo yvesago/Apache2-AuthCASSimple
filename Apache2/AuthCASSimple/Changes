@@ -1,5 +1,13 @@
 Revision history for Perl module Apache2::AuthCASSimple
 
+0.07 Thu, 2 Apr 2009 11:38:26 +0200
+    - parse args with CGI
+    - closes debian bug #521059 (thx to Luk Claes & dam) : 
+        a missing mod_perl1 mod_perl2 translation
+    - clean cookie path (thx to A Ledrezen)
+    - clean login_url
+    - better logs with level debug
+
 0.06 Thu, 11 Dec 2008 17:05:04 +0100
     - add an HTTPSServer config flag, mod_perl2 can not detect SSL whithout Apache2::ModSSL
 
