@@ -12,7 +12,7 @@ use Apache2::Connection;
 use CGI;
 use vars qw($VERSION);
 
-$VERSION = '0.07';
+$VERSION = '0.08';
 
 #
 # handler()
