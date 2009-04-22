@@ -9,10 +9,9 @@ use Apache2::Log;
 use Apache::Session::Wrapper;
 use Authen::CAS::Client;
 use Apache2::Connection;
-use CGI;
 use vars qw($VERSION);
 
-$VERSION = '0.08';
+$VERSION = '0.09';
 
 #
 # handler()
@@ -24,7 +23,6 @@ sub handler ($) {
   my $log = $r->log();
 
 
-  my $q = CGI->new($r);
   # does it need to do something ?
   #return DECLINED unless($r->ap_auth_type() eq __PACKAGE__);
 
@@ -36,8 +34,8 @@ sub handler ($) {
   my $cas_session_timeout = $r->dir_config('CASSessionTimeout') || 60;
   my $cas_ssl = $r->dir_config('CASServerNoSSL')?0:1;
   my $cas_name = $r->dir_config('CASServerName') || 'my.casserver.com';
-  my $cas_port = $r->dir_config('CASServerPort') ? ':'.$r->dir_config('CASServerPort') : 443 ;
-  $cas_port = '' if ( $cas_port == 443 && $cas_ssl );
+  my $cas_port = $r->dir_config('CASServerPort') ? ':'.$r->dir_config('CASServerPort') : ':443' ;
+  $cas_port = '' if ( $cas_port eq ':443' && $cas_ssl );
   my $cas_path = $r->dir_config('CASServerPath') || '/' ;
   $cas_path = '' if ($cas_path eq '/');
   my $mod_proxy = $r->dir_config('ModProxy');
@@ -47,7 +45,6 @@ sub handler ($) {
   if($cas_session_timeout >= 0 && ($user = _get_user_from_session($r))) {
     $log->info(__PACKAGE__.": Session found for user $user.");
     $r->user($user);
-    $r->subprocess_env( REMOTE_USER => $user );
     return OK;
   }
   elsif($cas_session_timeout >= 0) {
@@ -74,8 +71,9 @@ sub handler ($) {
   $login_url =~ s/\?/\&/;
   $login_url = $cas->login_url().$login_url;
   #$log->info( '==login_url==='.$login_url.'____');
- 
-  my $ticket = $q->param('ticket');
+
+  my %args = map { split '=', $_ }  split '&', $r->args();
+  my $ticket = $args{'ticket'};
   # redirect to CAS server unless ticket parameter
   unless ($ticket) {
     $log->info(__PACKAGE__.": No ticket, client redirected to CAS server. ".$login_url);
@@ -115,7 +113,7 @@ sub handler ($) {
    $log->info(__PACKAGE__.": New session ".$r->uri() ."--".$r->args());
 
    # if we are there (and timeout is set), we can create session data and cookie
-   # _remove_ticket($r);
+   _remove_ticket($r);
    _create_user_session($r) if($cas_session_timeout >= 0);
    $log->debug("Location => ".$r->uri . ($str_args ? '?' . $str_args : ''));
    $r->err_headers_out->add("Location" => $r->uri . ($str_args ? '?' . $str_args : '') );
@@ -138,8 +136,7 @@ sub _str_args ($;$) {
   my $r = shift;
   my $keep_ticket = shift;
 
-  my $q = CGI->new($r);
-  my %args = $q->Vars;
+  my %args = map { split '=', $_ }  split '&', $r->args();
   my @qs = ();
 
   foreach (sort {$a cmp $b} keys(%args)) {
@@ -181,8 +178,6 @@ sub _get_requested_url ($$) {
 #
 sub _get_query_string ($) {
   my $r = shift;
-
-  my $q = CGI->new($r);
 
   _post_to_get($r) if ($r->method eq 'POST');
 
@@ -346,7 +341,7 @@ This module allow the use of simple text files for sessions.
     PerlSetVar CASServerPath /
     # PerlSetVar CASServerPort 443
     # PerlSetVar CASServerNoSSL 1
-    PerlSetVar CASSessionTimeout 60
+    PerlSetVar CASSessionTimeout 3660
     PerlSetVar CASSessionDirectory /tmp
     # PerlSetVar CASFixDirectory /
     # PerlSetVar ModProxy 1
@@ -430,7 +425,7 @@ call by apache2
 
 =head1 VERSION
 
-This documentation describes Apache2::AuthCASSimple version 0.07
+This documentation describes Apache2::AuthCASSimple version 0.09
 
 =head1 BUGS AND TROUBLESHOOTING
 
@@ -469,7 +464,6 @@ Please submit any bug reports to agostini@univ-metz.fr.
 Requires C<mod_perl 2> version 2.02 or later
 Requires L<Authen::CAS::Client>
 Requires L<Apache::Session::Wrapper> 
-Requires L<CGI> 
 
 =head1 AUTHOR
 

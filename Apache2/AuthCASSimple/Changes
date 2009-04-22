@@ -1,5 +1,8 @@
 Revision history for Perl module Apache2::AuthCASSimple
 
+0.09 Wed, 22 Apr 2009 12:33:26 +0200
+    - revert use of CGI, better fix up for REMOTE_USER bug
+
 0.08 Wed, 22 Apr 2009 08:28:46 +0200
     - fix REMOTE_USER not set bug 
     closes cpan http://rt.cpan.org/Ticket/Display.html?id=45202
