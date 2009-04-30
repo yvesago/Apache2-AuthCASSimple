@@ -11,7 +11,7 @@ use Authen::CAS::Client;
 use Apache2::Connection;
 use vars qw($VERSION);
 
-$VERSION = '0.09';
+$VERSION = '0.10';
 
 #
 # handler()
@@ -67,8 +67,6 @@ sub handler ($) {
 
   my $requested_url = _get_requested_url($r,$mod_proxy);
   my $login_url = $requested_url;
-  # TODO better clean url
-  $login_url =~ s/\?/\&/;
   $login_url = $cas->login_url().$login_url;
   #$log->info( '==login_url==='.$login_url.'____');
 
@@ -100,7 +98,7 @@ sub handler ($) {
 
   unless ($user) {
     $log->info(__PACKAGE__.": Unable to validate ticket ".$ticket." on CAS server.");
-    $r->err_headers_out->add("Location" => $login_url);
+    $r->err_headers_out->add("Location" => $r->uri._str_args($r)); # remove ticket
     return REDIRECT;
   }
 
@@ -108,12 +106,11 @@ sub handler ($) {
 
   if ( $user ) {
    $r->user($user);
-   my $str_args = _str_args($r);
+   my $str_args = _str_args($r); # remove ticket
 
    $log->info(__PACKAGE__.": New session ".$r->uri() ."--".$r->args());
 
    # if we are there (and timeout is set), we can create session data and cookie
-   _remove_ticket($r);
    _create_user_session($r) if($cas_session_timeout >= 0);
    $log->debug("Location => ".$r->uri . ($str_args ? '?' . $str_args : ''));
    $r->err_headers_out->add("Location" => $r->uri . ($str_args ? '?' . $str_args : '') );
@@ -142,7 +139,7 @@ sub _str_args ($;$) {
   foreach (sort {$a cmp $b} keys(%args)) {
     next if ($_ eq 'ticket' && !$keep_ticket);
     my $str = $args{$_};
-    $str =~ s/([^A-Za-z0-9])/sprintf("%%%02X", ord($1))/seg;
+    #$str =~ s/([^A-Za-z0-9])/sprintf("%%%02X", ord($1))/seg;
     push(@qs, $_."=".$str);
   }
 

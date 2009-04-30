@@ -10,6 +10,7 @@ requires 'Apache::Session::Wrapper';
 requires 'Authen::CAS::Client';
 requires 'Apache2::Log';
 requires 'Apache2::Connection';
+requires 'Crypt::SSLeay';
 
 build_requires  'Pod::Coverage';
 build_requires  'Test::More';
