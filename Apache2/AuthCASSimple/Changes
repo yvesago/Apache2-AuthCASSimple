@@ -3,7 +3,7 @@ Revision history for Perl module Apache2::AuthCASSimple
 0.10  Thu, 10 May 2009 11:53:07 +0200
     - add dep on Crypt::SSLeay
     - swap clean login_url (0.07 was a bad idea) with uri_escape
-    - fix _post_to_get with $r->read
+    - fix _post_to_get with $r->read closes  https://rt.cpan.org/Ticket/Display.html?id=45923
     - add test cases in examples
 
 0.09 Wed, 22 Apr 2009 12:33:26 +0200

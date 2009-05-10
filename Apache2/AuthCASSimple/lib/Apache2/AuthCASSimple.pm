@@ -319,11 +319,11 @@ __END__
 
 =head1 NAME
 
-Apache2::AuthCASSimple - Apache2 module to authentificate trough a CAS server
+Apache2::AuthCASSimple - Apache2 module to authentificate through a CAS server
 
 =head1 DESCRIPTION
 
-Apache2::AuthCASSimple is an authentication module for Apache2/mod_perl2. It allow you to authentificate users trough a Yale CAS server. It means you don't need to give login/password if you've already be authentificate by the CAS server, only tickets are exchanged between Web client, Apache2 server and CAS server. If you not're authentificate yet, you'll be redirect on the CAS server login form.
+Apache2::AuthCASSimple is an authentication module for Apache2/mod_perl2. It allow you to authentificate users through a Yale CAS server. It means you don't need to give login/password if you've already be authentificate by the CAS server, only tickets are exchanged between Web client, Apache2 server and CAS server. If you not're authentificate yet, you'll be redirect on the CAS server login form.
 
 This module allow the use of simple text files for sessions.
 

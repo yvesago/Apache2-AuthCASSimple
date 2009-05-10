@@ -1,4 +1,6 @@
 Changes
+examples/apache_conf/default
+examples/apache_www/index.html
 examples/delete_session_data.pl
 inc/Module/AutoInstall.pm
 inc/Module/Install.pm
