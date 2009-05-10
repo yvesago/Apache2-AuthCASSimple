@@ -1,10 +1,10 @@
 NAME
-    Apache2::AuthCASSimple - Apache2 module to authentificate trough a CAS
+    Apache2::AuthCASSimple - Apache2 module to authentificate through a CAS
     server
 
 DESCRIPTION
     Apache2::AuthCASSimple is an authentication module for
-    Apache2/mod_perl2. It allow you to authentificate users trough a Yale
+    Apache2/mod_perl2. It allow you to authentificate users through a Yale
     CAS server. It means you don't need to give login/password if you've
     already be authentificate by the CAS server, only tickets are exchanged
     between Web client, Apache2 server and CAS server. If you not're
@@ -13,6 +13,8 @@ DESCRIPTION
     This module allow the use of simple text files for sessions.
 
 SYNOPSIS
+      PerlOptions +GlobalRequest
+
       <Location /protected>
         AuthType Apache2::AuthCASSimple
         PerlAuthenHandler Apache2::AuthCASSimple
@@ -21,10 +23,11 @@ SYNOPSIS
         PerlSetVar CASServerPath /
         # PerlSetVar CASServerPort 443
         # PerlSetVar CASServerNoSSL 1
-        PerlSetVar CASSessionTimeout 60
+        PerlSetVar CASSessionTimeout 3660
         PerlSetVar CASSessionDirectory /tmp
         # PerlSetVar CASFixDirectory /
         # PerlSetVar ModProxy 1
+        # PerlSetVar HTTPSServer 1
 
         require valid-user
       </Location>
@@ -77,24 +80,40 @@ CONFIGURATION
     ModProxy
         Apache2 mod_perl2 don't be use with mod_proxy. Default is off.
 
+    HTTPSServer
+        If you want to keep a HTTPS server for all data. Default is 0.
+
+    OK AUTH_REQUIRED DECLINED REDIRECT SERVER_ERROR M_GET
+        Apache constants to make pod coverage happy
+
 METHOD
   handler
     call by apache2
 
 VERSION
-    This documentation describes Apache2::AuthCASSimple version 0.0.1
+    This documentation describes Apache2::AuthCASSimple version 0.10
 
 BUGS AND TROUBLESHOOTING
-    * Old expired sessions files must be deleted with an example provided
-    script : "delete_session_data.pl"
-    * Apache::Session::Wrapper certainly need Apache2::Cookie
-    * $r must be global for sessions with Apache::Session::Wrapper, add
+    *   Old expired sessions files must be deleted with an example provided
+        script : "delete_session_data.pl"
+
+    *   Apache::Session::Wrapper certainly need Apache2::Cookie
+
+    *   $r must be global for sessions with Apache::Session::Wrapper, add
+
           PerlOptions +GlobalRequest
 
         in your virtualhost conf
 
-    * Apreq module must be enable in debian
+    *   Apreq module must be enable in debian
+
+          a2enmod apreq
+
+        or add
+
           LoadModule apreq_module /usr/lib/apache2/modules/mod_apreq2.so
+
+        in your apache configuration file
 
     Please submit any bug reports to agostini@univ-metz.fr.
 
@@ -110,7 +129,7 @@ AUTHOR
         http://www.crium.univ-metz.fr
 
 COPYRIGHT
-    Copyright 2008 Yves Agostini - <agostini@univ-metz.fr>
+    Copyright (c) 2009 by Yves Agostini
 
     This program is free software; you can redistribute it and/or modify it
     under the same terms as Perl itself.
