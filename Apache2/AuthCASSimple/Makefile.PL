@@ -11,6 +11,8 @@ requires 'Authen::CAS::Client';
 requires 'Apache2::Log';
 requires 'Apache2::Connection';
 requires 'Crypt::SSLeay';
+requires 'Apache2::RequestIO';
+requires 'URI::Escape';
 
 build_requires  'Pod::Coverage';
 build_requires  'Test::More';

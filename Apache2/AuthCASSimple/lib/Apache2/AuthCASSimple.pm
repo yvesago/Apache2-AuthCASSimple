@@ -9,6 +9,8 @@ use Apache2::Log;
 use Apache::Session::Wrapper;
 use Authen::CAS::Client;
 use Apache2::Connection;
+use Apache2::RequestIO;
+use URI::Escape;
 use vars qw($VERSION);
 
 $VERSION = '0.10';
@@ -66,7 +68,7 @@ sub handler ($) {
   }
 
   my $requested_url = _get_requested_url($r,$mod_proxy);
-  my $login_url = $requested_url;
+  my $login_url = uri_escape $requested_url;
   $login_url = $cas->login_url().$login_url;
   #$log->info( '==login_url==='.$login_url.'____');
 
@@ -139,7 +141,6 @@ sub _str_args ($;$) {
   foreach (sort {$a cmp $b} keys(%args)) {
     next if ($_ eq 'ticket' && !$keep_ticket);
     my $str = $args{$_};
-    #$str =~ s/([^A-Za-z0-9])/sprintf("%%%02X", ord($1))/seg;
     push(@qs, $_."=".$str);
   }
 
@@ -190,7 +191,8 @@ sub _get_query_string ($) {
 sub _post_to_get ($) {
   my $r = shift;
 
-  my $content = _str_args($r,1);
+  my $content;
+  $r->read($content,$r->headers_in->{'Content-length'});
 
   $r->log()->info('POST to GET: '.$content);
   $r->method("GET");
@@ -422,7 +424,7 @@ call by apache2
 
 =head1 VERSION
 
-This documentation describes Apache2::AuthCASSimple version 0.09
+This documentation describes Apache2::AuthCASSimple version 0.10
 
 =head1 BUGS AND TROUBLESHOOTING
 
